@@ -210,15 +210,19 @@ class Agent extends EmbeddedDocument {
    * @return {Object} request The configured axios instance to use for a request.
    */
   request(data, parameters = {}) {
-    instance.interceptors.request.use(
-      ({ httpAgent, httpsAgent, ...request }) =>
-        new Promise((resolve, reject) =>
-          this.push({
-            request: this.handleRequest(request),
-            resolve,
-            reject
-          })
+    const requestInterceptor = instance.interceptors.request.use(
+      ({ httpAgent, httpsAgent, ...request }) => {
+        
+        instance.interceptors.request.eject(requestInterceptor);
+
+        return new Promise((resolve, reject) =>
+        this.push({
+          request: this.handleRequest(request),
+          resolve,
+          reject
+        })
         )
+      }
     );
 
     instance.interceptors.response.use(
@@ -248,6 +252,12 @@ class Agent extends EmbeddedDocument {
    * @return {Promise}      the request configuration object
    */
   handleResponse(response) {
+
+    const authorization = _.get(response, 'config.headers.Authorization');
+    if(authorization) {
+      this.connection.deactivateSession(authorization);
+    }
+
     if (typeof response.data !== 'object') {
       return Promise.reject({
         message: 'The Data API is currently unavailable',
@@ -363,6 +373,12 @@ class Agent extends EmbeddedDocument {
    * @return {Promise}      A promise rejection containing a code and a message
    */
   handleError(error) {
+  
+    const authorization = _.get(error, 'response.config.headers.Authorization');
+    if(authorization) {
+      this.connection.deactivateSession(authorization);
+    }
+
     if (error.code) {
       return Promise.reject({ code: error.code, message: error.message });
     } else if (
