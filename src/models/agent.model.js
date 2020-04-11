@@ -252,12 +252,6 @@ class Agent extends EmbeddedDocument {
    * @return {Promise}      the request configuration object
    */
   handleResponse(response) {
-
-    const authorization = _.get(response, 'config.headers.Authorization');
-    if(authorization) {
-      this.connection.deactivateSession(authorization);
-    }
-
     if (typeof response.data !== 'object') {
       return Promise.reject({
         message: 'The Data API is currently unavailable',
@@ -376,7 +370,7 @@ class Agent extends EmbeddedDocument {
   
     const authorization = _.get(error, 'response.config.headers.Authorization');
     if(authorization) {
-      this.connection.deactivateSession(authorization);
+      this.connection.extend(authorization);
     }
 
     if (error.code) {
