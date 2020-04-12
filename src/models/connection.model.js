@@ -287,20 +287,6 @@ class Connection extends EmbeddedDocument {
     const session = _.find(this.sessions, session => session.token === token);
     if (session) session.extend();
   }
-  
-  /**
-   * @method deactivateSession
-   * @memberof Connection
-   * @public
-   * @description deactivates the session identified by the token in the header param. This makes the session usable again.
-   * @param {String} [header] The header containing the token to clear.
-   */
-  deactivateSession(header) {
-    const session = _.find(this.sessions, session => { return header.replace('Bearer ', '') === session.token });
-    if (session) {
-      session.active = false;
-    }
-  }
 }
 
 module.exports = {
